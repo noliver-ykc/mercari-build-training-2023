@@ -59,7 +59,7 @@ If successful, you can access the local host `http://127.0.0.1:9000` on our brow
 $ go version
 ```
 
-If the version does not correspond to the Python version you installed, double check your installation as it is not **added to your PATH**.
+If the version does not correspond to the Go version you installed, double check your installation as it is not **added to your PATH**.
 
 **:book: Reference**
 
