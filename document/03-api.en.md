@@ -102,7 +102,16 @@ Make a file called `items.json` and add new items under `items` key.
 ```json
 {"items": [{"name": "jacket", "category": "fashion"}, ...]}
 ```
+NOTES FROM NICOLE:
+* When making the json file, I couldnt just leave it blank and expect it to populate on its own.  I needed to do this:
+```json
+{
+  "items": []
+}
+```
+And then it filled out the rest.
 
+* Also to make sure it didnt just populate every new item on the same line I added "json.dump(data, file, indent=2)", specifically indent=2 when adding data to the json
 ## 3. Get a list of items
 
 Implement a GET endpoint `/items` that returns the list of all items. The response should look like the following.
