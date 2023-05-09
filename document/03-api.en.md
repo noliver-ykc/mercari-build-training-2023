@@ -49,6 +49,36 @@ $ curl -X POST \
   * What is the **HTTP Status Code** when you receive these responses?
   * What do different types of status code mean?
 
+NOTES FROM NICOLE:
+Understand the difference between GET and POST requests:
+
+ * GET: The GET method is used to request data from a specified resource (e.g., a URL). It doesn't submit or change any data on the server. GET requests are idempotent, meaning that making the same request multiple times will yield the same result. They should only be used for retrieving data.
+ * POST: The POST method is used to submit data to a specified resource for processing, usually to create or update a resource. It sends data to the server in the request body. POST requests are not idempotent, so making the same request multiple times may have different outcomes.
+
+Why do we not see {"message": "item received: <name>"} on accessing http://127.0.0.1:9000/items from your browser?
+ * When you access a URL in your browser, it sends a GET request by default. The /items endpoint in the FastAPI application is defined to respond to POST requests. To see the expected response, you must send a POST request to the endpoint, which can be done using tools like curl, Postman, or by writing code to send the request.
+
+What is the HTTP Status Code when you receive these responses?
+ * For a successful POST request to the /items endpoint, the HTTP status code will be 200 OK. This status code indicates that the request was successful and the server has returned the requested data.
+ * If you try to access the /items endpoint with a GET request (e.g., from your browser), you'll receive a 405 Method Not Allowed status code, which means the HTTP method used is not supported for the requested resource.
+
+What do different types of status codes mean?
+ * HTTP status codes are three-digit numbers that indicate the outcome of an HTTP request. They are grouped into five classes based on the first digit:
+ * 1xx (Informational): The request was received, and the server is continuing to process it.
+ * 2xx (Successful): The request was successfully received, understood, and accepted.
+ * 3xx (Redirection): The request needs further action to be completed, usually following a provided URL.
+ * 4xx (Client Error): The request contains bad syntax or cannot be fulfilled by the server.
+ * 5xx (Server Error): The server failed to fulfill a valid request.
+_Some common status codes include:_
+ * 200 OK: The request was successful, and the server has returned the requested data.
+ * 201 Created: The request was successful, and the server has created a new resource as a result.
+ * 400 Bad Request: The server cannot process the request due to incorrect syntax or invalid data.
+ * 401 Unauthorized: The request requires authentication, and the client has not provided valid credentials.
+ * 403 Forbidden: The client does not have permission to access the requested resource.
+ * 404 Not Found: The requested resource could not be found on the server.
+ * 500 Internal Server Error: The server encountered an error while processing the request.
+
+
 ## 2. List a new item
 
 Make an endpoint to add a new item
