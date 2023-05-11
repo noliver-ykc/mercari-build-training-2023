@@ -65,7 +65,7 @@ def read_items():
 
 # Define an endpoint that handles ids
 @app.get("/items/{item_id}")
-def read_item(item_id: str):
+def read_item(item_id: int):
     with open("items.json") as file:
         data = json.load(file)
 
