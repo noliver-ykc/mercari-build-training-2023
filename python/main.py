@@ -7,11 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import json
 import hashlib
+import sqlite3
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 images = pathlib.Path(__file__).parent.resolve() / "images"
+data_base = pathlib.Path(__file__).parent.resolve() / "mercari.sqlite3"
 origins = [ os.environ.get('FRONT_URL', 'http://localhost:9000') ]
 app.add_middleware(
     CORSMiddleware,
@@ -20,7 +22,43 @@ app.add_middleware(
     allow_methods=["GET","POST","PUT","DELETE"],
     allow_headers=["*"],
 )
-item_id_num = 1  # Initialize the item ID counter
+
+conn = sqlite3.connect(data_base)
+
+# create the category table
+def create_category_table(conn: sqlite3.Connection):
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS category (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+
+create_category_table(conn)
+
+# create the item table
+def create_items_table(conn: sqlite3.Connection):
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category_id INTEGER,
+                image_name TEXT NOT NULL,
+                FOREIGN KEY(category_id) REFERENCES category(id)
+            )
+        """)
+        conn.commit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+conn = sqlite3.connect(data_base)
+
+create_items_table(conn)
+
 
 @app.get("/")
 def root():
@@ -28,40 +66,58 @@ def root():
 
 @app.post("/items")
 def add_item(name: Optional[str] = Form(None), category: Optional[str] = Form(None), image: UploadFile = File(...)):
-    # Load existing items from the file
-    with open("items.json") as file:
-        data = json.load(file)
-
-    # Access the global item ID counter
-    global item_id_num
+    # Open connection to database
+    conn = sqlite3.connect(data_base)
+    cursor = conn.cursor()
 
     # hash image using sha256
     imageContent = image.file.read()
     hashedImage = hashlib.sha256(imageContent).hexdigest()
     hashedImg = hashedImage + os.path.splitext(image.filename)[1]
 
-    # Create a new item dictionary
-    new_item = {"id": item_id_num,"name": name, "category": category, "imageFile": hashedImg}
+    # Check if the category already exists
+    cursor.execute("SELECT id FROM category WHERE name=?", (category,))
+    category_id = cursor.fetchone()
 
-    # Increment the item ID counter for the next item
-    item_id_num += 1
+    # If the category doesn't exist, add it
+    if category_id is None:
+        cursor.execute("INSERT INTO category (name) VALUES (?)", (category,))
+        conn.commit()
+        # Fetch the new category id
+        cursor.execute("SELECT id FROM category WHERE name=?", (category,))
+        category_id = cursor.fetchone()
 
-    # Append the new item to the existing list of items
-    data["items"].append(new_item)
+    # Create a new item
+    cursor.execute("""
+        INSERT INTO items (name, category_id, image_name)
+        VALUES (?, ?, ?)
+    """, (name, category_id[0], hashedImg))
 
-    # Save the updated items to the file
-    with open("items.json", "w") as file:
-        json.dump(data, file, indent=2)
-    #logger.info(f"Receive item: {name}")
+    # Commit and close connection
+    conn.commit()
+    conn.close()
+
     return {"message": f"item received: {name}"}
+
+
+
 
 # Define a route for the "/items" URL with a GET method
 @app.get("/items")
 def read_items():
-    with open("items.json") as file:
-        data = json.load(file)
+    conn = sqlite3.connect(data_base)
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT items.id, items.name, category.name, items.image_name
+        FROM items
+        INNER JOIN category ON items.category_id = category.id
+    ''')
+    item_results = cursor.fetchall()
 
-    return data
+    conn.close()
+    return item_results
+
+
 
 # Define an endpoint that handles ids
 @app.get("/items/{item_id}")
@@ -88,3 +144,20 @@ async def get_image(image_filename):
         image = images / "default.jpg"
 
     return FileResponse(image)
+
+# search for items
+@app.get("/search")
+def search_item(keyword: str):
+    conn = sqlite3.connect(data_base)
+    cursor = conn.cursor()
+    search_keyword = f"%{keyword}%"
+    cursor.execute('''
+        SELECT items.id, items.name, category.name, items.image_name
+        FROM items
+        INNER JOIN category ON items.category_id = category.id
+        WHERE items.name LIKE ?
+    ''', (search_keyword,))
+    search_results = cursor.fetchall()
+
+    conn.close()
+    return search_results
