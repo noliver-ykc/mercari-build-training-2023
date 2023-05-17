@@ -13,7 +13,7 @@ app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 images = pathlib.Path(__file__).parent.resolve() / "images"
-data_base = pathlib.Path(__file__).parent.resolve() / "mercari.sqlite3"
+data_base = pathlib.Path(__file__).parent.resolve() /"db"/ "mercari.sqlite3"
 origins = [ os.environ.get('FRONT_URL', 'http://localhost:9000') ]
 app.add_middleware(
     CORSMiddleware,
