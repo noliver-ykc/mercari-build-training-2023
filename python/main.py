@@ -25,7 +25,7 @@ app.add_middleware(
 
 conn = sqlite3.connect(data_base)
 
-# create the category table :)
+# create the category table
 def create_category_table(conn: sqlite3.Connection):
     cursor = conn.cursor()
     cursor.execute("""
