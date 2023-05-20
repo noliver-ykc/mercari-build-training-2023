@@ -14,12 +14,12 @@ logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 images = pathlib.Path(__file__).parent.resolve() / "images"
 data_base = pathlib.Path(__file__).parent.resolve() /"db"/ "mercari.sqlite3"
-origins = [ os.environ.get('FRONT_URL', 'http://localhost:9000') ]
+origins = [ os.environ.get('FRONT_URL', 'http://localhost:3000') ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=False,
-    allow_methods=["GET","POST","PUT","DELETE"],
+    allow_methods=["GET","POST","PUT","DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -75,6 +75,11 @@ def add_item(name: Optional[str] = Form(None), category: Optional[str] = Form(No
     hashedImage = hashlib.sha256(imageContent).hexdigest()
     hashedImg = hashedImage + os.path.splitext(image.filename)[1]
 
+    # Save the file to disk
+    with open(images / hashedImg, "wb") as f:
+        f.write(imageContent)
+
+
     # Check if the category already exists
     cursor.execute("SELECT id FROM category WHERE name=?", (category,))
     category_id = cursor.fetchone()
@@ -103,6 +108,7 @@ def add_item(name: Optional[str] = Form(None), category: Optional[str] = Form(No
 
 
 # Define a route for the "/items" URL with a GET method
+# instead of returning item results, construct an object on that line with keys items and the value is my item results table
 @app.get("/items")
 def read_items():
     conn = sqlite3.connect(data_base)
@@ -113,9 +119,10 @@ def read_items():
         INNER JOIN category ON items.category_id = category.id
     ''')
     item_results = cursor.fetchall()
+    items = [{"id": item[0], "name": item[1], "category": item[2], "image_filename": item[3]} for item in item_results]
 
     conn.close()
-    return item_results
+    return {"items": items}
 
 
 
@@ -136,8 +143,8 @@ async def get_image(image_filename):
     # Create image path
     image = images / image_filename
 
-    if not image_filename.endswith(".jpg"):
-        raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
+    if not image_filename.endswith((".jpg", ".png")):
+        raise HTTPException(status_code=400, detail="Image path does not end with .jpg/.png")
 
     if not image.exists():
         logger.debug(f"Image not found: {image}")

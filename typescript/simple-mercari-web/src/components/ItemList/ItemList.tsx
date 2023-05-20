@@ -19,15 +19,14 @@ export const ItemList: React.FC<Prop> = (props) => {
   const { reload = true, onLoadCompleted } = props;
   const [items, setItems] = useState<Item[]>([])
   const fetchItems = () => {
-    fetch(server.concat('/items'),
-      {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-      })
+    fetch(server.concat('/items'), {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+    })
       .then(response => response.json())
       .then(data => {
         console.log('GET success:', data);
@@ -38,6 +37,7 @@ export const ItemList: React.FC<Prop> = (props) => {
         console.error('GET error:', error)
       })
   }
+
 
   useEffect(() => {
     if (reload) {
@@ -51,7 +51,7 @@ export const ItemList: React.FC<Prop> = (props) => {
         return (
           <div key={item.id} className='ItemList'>
             {/* TODO: Task 1: Replace the placeholder image with the item image */}
-            <img src={placeholderImage} />
+            <img src={`http://localhost:9000/image/${item.image_filename}`} alt="item"/>
             <p>
               <span>Name: {item.name}</span>
               <br />
