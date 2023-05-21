@@ -13,10 +13,10 @@ interface Prop {
   reload?: boolean;
   onLoadCompleted?: () => void;
 }
-
-export const ItemList: React.FC<Prop> = (props) => {
+export const ItemCallout: React.FC<Prop> = (props) => {
   const { reload = true, onLoadCompleted } = props;
-  const [items, setItems] = useState<Item[]>([])
+  const [item, setItem] = useState<Item | null>(null);
+
   const fetchItems = () => {
     fetch(server.concat('/items'), {
       method: 'GET',
@@ -29,13 +29,14 @@ export const ItemList: React.FC<Prop> = (props) => {
       .then(response => response.json())
       .then(data => {
         console.log('GET success:', data);
-        const reversedItems = data.items.reverse();
-        const slicedItems = reversedItems.slice(1); // Skip the most recent item
-        setItems(slicedItems);
+        const mostRecentItem = data.items[data.items.length - 1];
+        setItem(mostRecentItem);
         onLoadCompleted && onLoadCompleted();
       })
+      .catch(error => {
+        console.error('GET error:', error)
+      });
   }
-
 
   useEffect(() => {
     if (reload) {
@@ -44,19 +45,18 @@ export const ItemList: React.FC<Prop> = (props) => {
   }, [reload]);
 
   return (
-    <div className="itemsGrid">
-      {items.map((item) => {
-        return (
-          <div key={item.id} className='ItemList'>
-            <img className="item-img"src={`http://localhost:9000/image/${item.image_filename}`} alt="item"/>
-            <div className="item-info">
-              <span className="item-name">{item.name}</span>
-              <br />
-              <span className="item-category">#{item.category}</span>
-            </div>
+    <div className="featured">
+      {item && (
+        <div key={item.id} className='featured-item'>
+          <img className="featured-img"src={`http://localhost:9000/image/${item.image_filename}`} alt="item"/>
+          <div className="featured-item-text">
+            <p className="featured-item-name">{item.name}</p>
+            <p className="featured-item-category">#{item.category}</p>
           </div>
-        )
-      })}
+
+        </div>
+
+      )}
     </div>
-  )
+  );
 };

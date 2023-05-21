@@ -2,20 +2,20 @@ import { useState } from 'react';
 import './App.css';
 import { ItemList } from './components/ItemList';
 import { Listing } from './components/Listing';
-
+import logo from './components/assets/logo.png';
+import { ItemCallout } from './components/ItemList/ItemCallout';
 function App() {
   // reload ItemList after Listing complete
   const [reload, setReload] = useState(true);
   return (
-    <div>
+    <div className="page-spacing">
       <header className='Title'>
-        <p>
-          <b>Simple Mercari</b>
-        </p>
+        <img className ="simple-logo" src={logo} alt="logo"/>
+        <div>
+          <Listing onListingCompleted={() => setReload(true)} />
+        </div>
       </header>
-      <div>
-        <Listing onListingCompleted={() => setReload(true)} />
-      </div>
+      <ItemCallout reload={reload} onLoadCompleted={() => setReload(false)} />
       <div>
         <ItemList reload={reload} onLoadCompleted={() => setReload(false)} />
       </div>

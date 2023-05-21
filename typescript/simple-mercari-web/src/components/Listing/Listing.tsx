@@ -20,6 +20,7 @@ export const Listing: React.FC<Prop> = (props) => {
     image: "",
   };
   const [values, setValues] = useState<formDataType>(initialState);
+  const [formRef, setFormRef] = useState<any>();
 
   const onValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValues({
@@ -45,6 +46,8 @@ export const Listing: React.FC<Prop> = (props) => {
     })
       .then(response => {
         console.log('POST status:', response.statusText);
+        setValues(initialState); // reset form here
+        formRef && formRef.reset(); // reset file input here
         onListingCompleted && onListingCompleted();
       })
       .catch((error) => {
@@ -53,12 +56,16 @@ export const Listing: React.FC<Prop> = (props) => {
   };
   return (
     <div className='Listing'>
-      <form onSubmit={onSubmit}>
-        <div>
-          <input type='text' name='name' id='name' placeholder='name' onChange={onValueChange} required />
-          <input type='text' name='category' id='category' placeholder='category' onChange={onValueChange} />
-          <input type='file' name='image' id='image' onChange={onFileChange} required />
-          <button type='submit'>List this item</button>
+      <form ref={e => setFormRef(e)} onSubmit={onSubmit}>
+        <div className="listing-form">
+          <input type='text' name='name' id='name' placeholder='name' onChange={onValueChange} value={values.name} required />
+          <input type='text' name='category' id='category' placeholder='category' onChange={onValueChange} value={values.category} />
+          {/* <label htmlFor="image" >
+            <button className="form-img-btn">Upload Image</button>
+          </label> */}
+          <input className="custom-file-upload" type="file" name="image" id="image" onChange={onFileChange} required />
+
+          <button className ="form-btn" type='submit'>List this item</button>
         </div>
       </form>
     </div>
